@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+
+<project name="hbase packaging" default="package-deb">
+  <property file="${basedir}/build.properties"/> 
+  <target name="package-deb">
+    <taskdef name="deb"
+           classname="org.vafer.jdeb.ant.DebAntTask">
+    </taskdef>
+    <!--<mkdir dir="${project.build.directory}/deb/hbase.control" />-->
+
+    <copy todir="${basedir}/target/deb/hbase.control">
+      <fileset dir="${basedir}/deb/hbase.control">
+        <exclude name="control" />
+      </fileset>
+    </copy>
+
+    <copy file="${basedir}/deb/hbase.control/control" todir="${basedir}/target/deb/hbase.control">
+      <filterchain>
+        <replacetokens>
+          <token key="version" value="${package.version}" />
+        </replacetokens>
+      </filterchain>
+    </copy>
+
+    <deb destfile="${basedir}/target/${artifactId}_${package.version}-${package.release}_${os.arch}.deb" control="${basedir}/target/deb/hbase.control">
+      <data src="${basedir}/${final.name}.tar.gz" type="archive">
+        <mapper type="perm" strip="1" prefix="${package.prefix}/share/hbase" />
+        <exclude name="${final.name}/bin" />
+        <exclude name="${final.name}/bin/**" />
+        <exclude name="${final.name}/sbin" />
+        <exclude name="${final.name}/sbin/**" />
+        <exclude name="${final.name}/conf" />
+        <exclude name="${final.name}/conf/**" />
+        <exclude name="${final.name}/security" />
+        <exclude name="${final.name}/security/**" />
+        <exclude name="${final.name}/src" />
+        <exclude name="${final.name}/src/**" />
+        <exclude name="${final.name}/docs" />
+        <exclude name="${final.name}/docs/**" />
+        <exclude name="${final.name}/lib/hadoop-core*" />
+        <include name="**" />
+      </data>
+
+      <data src="${basedir}/${final.name}.tar.gz" type="archive">
+        <mapper type="perm" strip="2" prefix="${package.prefix}/share/hbase/sbin"/>
+        <!--
+        <exclude name="${final.name}/bin/hbase" />
+        <include name="${final.name}/bin/**" />
+      -->
+        <include name="${final.name}/sbin/**" />
+      </data>
+      <data src="${basedir}/${final.name}.tar.gz" type="archive">
+        <mapper type="perm" strip="2" prefix="${package.prefix}/share/hbase/bin"/>
+        <include name="${final.name}/bin/**" />
+      </data>	
+
+      <tarfileset dir="${basedir}/deb/init.d" filemode="755" prefix="${package.prefix}/share/hbase/sbin">
+        <include name="**" />
+      </tarfileset>
+      <tarfileset dir="${basedir}" filemode="755" prefix="${package.prefix}/share/hbase/sbin">
+        <include name="update-hbase-env.sh" />
+      </tarfileset>      
+      <data src="${basedir}/${final.name}.tar.gz" type="archive">
+        <mapper type="perm" strip="2" prefix="${package.conf.dir}"/>
+        <include name="${final.name}/conf/**" />
+      </data>       
+    </deb>
+  </target>
+</project>
